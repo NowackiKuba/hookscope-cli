@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-const DefaultAPIURL = "https://hookscope.dev"
+const DefaultAPIURL = "https://api.hookscope.dev"
 const ConfigDir = ".hookscope"
 const ConfigFile = "config.json"
 

@@ -15,8 +15,8 @@ import (
 )
 
 type Tunnel struct {
-	conn   *websocket.Conn
-	connMu sync.Mutex
+	conn    *websocket.Conn
+	connMu  sync.Mutex
 	writeMu sync.Mutex
 
 	apiURL    string
@@ -50,11 +50,17 @@ func (t *Tunnel) Connect(ctx context.Context) error {
 		return err
 	}
 
+	fmt.Println("Connecting to:", wsURL)
+
 	d := websocket.Dialer{
 		HandshakeTimeout: 15 * time.Second,
 	}
-	conn, _, err := d.DialContext(ctx, wsURL, nil)
+	conn, resp, err := d.DialContext(ctx, wsURL, nil)
 	if err != nil {
+		fmt.Println("DIAL ERROR:", err) // ← dodaj
+		if resp != nil {
+			fmt.Println("HTTP STATUS:", resp.Status) // ← dodaj
+		}
 		return err
 	}
 
@@ -197,16 +203,11 @@ func websocketURL(apiURL string) (string, error) {
 		u.Scheme = "wss"
 	case "http":
 		u.Scheme = "ws"
-	case "wss", "ws":
-		// leave
-	default:
-		return "", fmt.Errorf("unsupported api url scheme: %q", u.Scheme)
 	}
 	u.Path = "/socket.io/"
 	q := u.Query()
 	q.Set("EIO", "4")
 	q.Set("transport", "websocket")
-	q.Set("path", "/cli")
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }
@@ -227,16 +228,22 @@ func (t *Tunnel) socketIOHandshake(ctx context.Context) error {
 
 		msg, err := t.readText(ctx)
 		if err != nil {
+			fmt.Println("READ ERROR: ", err)
 			return err
 		}
+		fmt.Printf("HANDSHAKE MSG: %q\n", msg)
 		switch {
 		case msg == "2":
 			if err := t.writeText("3"); err != nil {
 				return err
 			}
 		case strings.HasPrefix(msg, "0"):
-			// Engine.IO open; ignore payload.
-		case strings.HasPrefix(msg, "40"):
+			// Engine.IO open — immediately request /cli namespace
+			if err := t.writeText("40/cli,"); err != nil {
+				return err
+			}
+		case strings.HasPrefix(msg, "40/cli"):
+			// connected to /cli namespace — handshake complete
 			return nil
 		}
 	}
@@ -257,11 +264,14 @@ func (t *Tunnel) readLoop(ctx context.Context) {
 			_ = t.writeText("3")
 			continue
 		}
-		if strings.HasPrefix(msg, "42") {
+		if strings.HasPrefix(msg, "42/cli,") || strings.HasPrefix(msg, "42") {
+			fmt.Printf("READ LOOP MSG: %q\n", msg) // ← dodaj
 			name, payload, err := parseSocketIOEvent(msg)
 			if err != nil {
+				fmt.Println("PARSE ERROR:", err) // ← dodaj
 				continue
 			}
+			fmt.Printf("EVENT: %q payload: %s\n", name, payload) // ← dodaj
 			select {
 			case t.events <- socketEvent{name: name, payload: payload}:
 			case <-ctx.Done():
@@ -274,7 +284,7 @@ func (t *Tunnel) readLoop(ctx context.Context) {
 }
 
 func parseSocketIOEvent(msg string) (string, json.RawMessage, error) {
-	raw := strings.TrimPrefix(msg, "42")
+	raw := strings.TrimPrefix(msg, "42/cli,")
 	var arr []json.RawMessage
 	if err := json.Unmarshal([]byte(raw), &arr); err != nil {
 		return "", nil, err
@@ -294,7 +304,7 @@ func (t *Tunnel) emit(ctx context.Context, event string, payload any) error {
 	if err != nil {
 		return err
 	}
-	frame := "42" + string(b)
+	frame := `42/cli,` + string(b)
 	return t.writeText(frame)
 }
 
