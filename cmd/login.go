@@ -1,17 +1,21 @@
 package cmd
 
 import (
-	"crypto/rand"
-	"encoding/hex"
+	"bufio"
 	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 
 	"github.com/NowackiKuba/hookscope-cli/internal/auth"
+	"github.com/NowackiKuba/hookscope-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "Authenticate and save token locally",
+	Short: "Authenticate with Hookscope",
 	RunE:  runLogin,
 }
 
@@ -19,19 +23,45 @@ func init() {
 	rootCmd.AddCommand(loginCmd)
 }
 
-func runLogin(cmd *cobra.Command, args []string) error {
-	token := generateFakeToken()
-	if err := auth.SaveToken(token); err != nil {
-		return fmt.Errorf("save token: %w", err)
+func openBrowser(url string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", url)
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", url)
+	default:
+		cmd = exec.Command("xdg-open", url)
 	}
-	fmt.Println("Logged in successfully. Token saved.")
-	return nil
+	return cmd.Start()
 }
 
-func generateFakeToken() string {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "fake-token-fallback"
+func runLogin(cmd *cobra.Command, args []string) error {
+	url := "https://app.hookscope.dev/settings/cli-token"
+	_ = openBrowser(url)
+	fmt.Println(styleZinc.Render("Opening Hookscope in your browser..."))
+	fmt.Println(styleZinc.Render("If browser didn't open, visit: ") + styleWhite.Render(url))
+	fmt.Println()
+
+	fmt.Println(styleZinc.Render("Go to " + url))
+	fmt.Println(styleWhite.Render("Paste your CLI token:"))
+
+	scanner := bufio.NewScanner(os.Stdin)
+	if !scanner.Scan() {
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+		return fmt.Errorf("no token provided")
 	}
-	return hex.EncodeToString(b)
+	token := strings.TrimSpace(scanner.Text())
+	if !strings.HasPrefix(token, "cli_") || len(token) <= 10 {
+		return fmt.Errorf(styleRed.Render("Invalid token. Expected something like cli_abc123..."))
+	}
+
+	if err := auth.Save(auth.Credentials{Token: token, APIURL: config.DefaultAPIURL}); err != nil {
+		return fmt.Errorf("save credentials: %w", err)
+	}
+
+	fmt.Println(styleViolet.Render("✓ Logged in successfully"))
+	return nil
 }

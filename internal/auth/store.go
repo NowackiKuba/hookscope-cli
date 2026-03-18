@@ -2,42 +2,56 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
-	"path/filepath"
 
 	"github.com/NowackiKuba/hookscope-cli/internal/config"
 )
 
-type Config struct {
-	Token string `json:"token"`
+type Credentials struct {
+	Token  string `json:"token"`
+	APIURL string `json:"api_url"`
 }
 
-func SaveToken(token string) error {
-	path := config.ConfigPath()
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0700); err != nil {
+func Save(creds Credentials) error {
+	if creds.APIURL == "" {
+		creds.APIURL = config.DefaultAPIURL
+	}
+	if err := config.EnsureConfigDir(); err != nil {
 		return err
 	}
-	cfg := Config{Token: token}
-	data, err := json.MarshalIndent(cfg, "", "  ")
+	data, err := json.MarshalIndent(creds, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0600)
+	return os.WriteFile(config.ConfigPath(), data, 0o600)
 }
 
-func LoadToken() (string, error) {
-	path := config.ConfigPath()
-	data, err := os.ReadFile(path)
+func Load() (Credentials, error) {
+	data, err := os.ReadFile(config.ConfigPath())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", nil
+			return Credentials{}, os.ErrNotExist
 		}
-		return "", err
+		return Credentials{}, err
 	}
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return "", err
+	var creds Credentials
+	if err := json.Unmarshal(data, &creds); err != nil {
+		return Credentials{}, err
 	}
-	return cfg.Token, nil
+	if creds.APIURL == "" {
+		creds.APIURL = config.DefaultAPIURL
+	}
+	if creds.Token == "" {
+		return Credentials{}, errors.New("missing token in config")
+	}
+	return creds, nil
+}
+
+func Clear() error {
+	err := os.Remove(config.ConfigPath())
+	if err != nil && os.IsNotExist(err) {
+		return nil
+	}
+	return err
 }
