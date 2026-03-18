@@ -37,7 +37,7 @@ func openBrowser(url string) error {
 }
 
 func runLogin(cmd *cobra.Command, args []string) error {
-	url := "https://app.hookscope.dev/settings/cli-token"
+	url := "https://app.hookscope.dev/settings/#cli-token"
 	_ = openBrowser(url)
 	fmt.Println(styleZinc.Render("Opening Hookscope in your browser..."))
 	fmt.Println(styleZinc.Render("If browser didn't open, visit: ") + styleWhite.Render(url))
