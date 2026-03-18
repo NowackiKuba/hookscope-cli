@@ -50,17 +50,11 @@ func (t *Tunnel) Connect(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Println("Connecting to:", wsURL)
-
 	d := websocket.Dialer{
 		HandshakeTimeout: 15 * time.Second,
 	}
-	conn, resp, err := d.DialContext(ctx, wsURL, nil)
+	conn, _, err := d.DialContext(ctx, wsURL, nil)
 	if err != nil {
-		fmt.Println("DIAL ERROR:", err) // ← dodaj
-		if resp != nil {
-			fmt.Println("HTTP STATUS:", resp.Status) // ← dodaj
-		}
 		return err
 	}
 
@@ -228,10 +222,8 @@ func (t *Tunnel) socketIOHandshake(ctx context.Context) error {
 
 		msg, err := t.readText(ctx)
 		if err != nil {
-			fmt.Println("READ ERROR: ", err)
 			return err
 		}
-		fmt.Printf("HANDSHAKE MSG: %q\n", msg)
 		switch {
 		case msg == "2":
 			if err := t.writeText("3"); err != nil {
@@ -265,13 +257,10 @@ func (t *Tunnel) readLoop(ctx context.Context) {
 			continue
 		}
 		if strings.HasPrefix(msg, "42/cli,") || strings.HasPrefix(msg, "42") {
-			fmt.Printf("READ LOOP MSG: %q\n", msg) // ← dodaj
 			name, payload, err := parseSocketIOEvent(msg)
 			if err != nil {
-				fmt.Println("PARSE ERROR:", err) // ← dodaj
 				continue
 			}
-			fmt.Printf("EVENT: %q payload: %s\n", name, payload) // ← dodaj
 			select {
 			case t.events <- socketEvent{name: name, payload: payload}:
 			case <-ctx.Done():

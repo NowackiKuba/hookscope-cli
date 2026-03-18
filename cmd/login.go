@@ -43,7 +43,6 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	fmt.Println(styleZinc.Render("If browser didn't open, visit: ") + styleWhite.Render(url))
 	fmt.Println()
 
-	fmt.Println(styleZinc.Render("Go to " + url))
 	fmt.Println(styleWhite.Render("Paste your CLI token:"))
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -55,13 +54,13 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	}
 	token := strings.TrimSpace(scanner.Text())
 	if !strings.HasPrefix(token, "cli_") || len(token) <= 10 {
-		return fmt.Errorf(styleRed.Render("Invalid token. Expected something like cli_abc123..."))
+		return fmt.Errorf("%s", styleRed.Render("Invalid token. Expected something like cli_abc123..."))
 	}
 
 	if err := auth.Save(auth.Credentials{Token: token, APIURL: config.DefaultAPIURL}); err != nil {
 		return fmt.Errorf("save credentials: %w", err)
 	}
 
-	fmt.Println(styleViolet.Render("✓ Logged in successfully"))
+	fmt.Println(styleGreen.Render("✓ Logged in successfully"))
 	return nil
 }
