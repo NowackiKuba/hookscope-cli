@@ -14,7 +14,14 @@ import (
 // cli_ebaedf96ca3fda5d548cbf3051db17dfa94b409348997d2b92496332af5c9813
 
 func Forward(localPort int, req api.WebhookRequest) (status int, err error) {
-	url := fmt.Sprintf("http://localhost:%d/", localPort)
+	path := req.Path
+	if path == "" {
+		path = "/"
+	}
+	if path[0] != '/' {
+		path = "/" + path
+	}
+	url := fmt.Sprintf("http://localhost:%d%s", localPort, path)
 
 	var bodyReader *bytes.Reader
 	if req.Body != nil {

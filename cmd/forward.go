@@ -160,17 +160,22 @@ func printForwardResult(port int, req api.WebhookRequest, status int, err error)
 		method = "REQUEST"
 	}
 
+	path := req.Path
+	if path == "" {
+		path = "/"
+	}
+
 	timestampPart := styleZinc.Render("[" + time.Now().Format("15:04:05") + "]")
 	methodPart := styleViolet.Render(fmt.Sprintf("%-7s", method))
 
-	const statusWidth = 30
+	const statusWidth = 32
 	const sizeWidth = 8
 
 	var statusPart string
 	if err != nil {
 		msg := err.Error()
-		if len(msg) > 30 {
-			msg = msg[:30]
+		if len(msg) > 32 {
+			msg = msg[:32]
 		}
 		statusPart = styleRed.Render(fmt.Sprintf("%-*s", statusWidth, "ERR "+msg))
 	} else {
@@ -195,7 +200,8 @@ func printForwardResult(port int, req api.WebhookRequest, status int, err error)
 	sizePart := styleZinc.Render(fmt.Sprintf("%*s", sizeWidth, fmt.Sprintf("%dB", req.Size)))
 
 	fmt.Println(timestampPart + " " + methodPart + " " + statusPart + " " + sizePart)
-	fmt.Println(styleZinc.Render("         └─ ") + styleWhite.Render(fmt.Sprintf("localhost:%d", port)))
+	fmt.Println(styleZinc.Render("         └─ ") + styleWhite.Render(fmt.Sprintf("localhost:%d", port))+ styleZinc.Render(path))
+	fmt.Println()
 }
 
 func handleReconnect(ctx context.Context, attempts *int) error {
@@ -219,7 +225,7 @@ func stringsTrim(s string) string {
 }
 
 func printForwardHeader(selected api.Endpoint, port int) {
-	const boxWidth = 45
+	const boxWidth = 60
 	const webhookMax = 40
 
 	webhookURL := selected.WebhookURL
@@ -227,7 +233,7 @@ func printForwardHeader(selected api.Endpoint, port int) {
 		webhookURL = webhookURL[:webhookMax-3] + "..."
 	}
 
-	titleLeft := styleWhite.Copy().Bold(true).Render("hookscope")
+	titleLeft := styleViolet.Copy().Bold(true).Render("hookscope")
 	titleRight := styleZinc.Render("v" + rootCmd.Version)
 	titleLine := lipgloss.NewStyle().Width(boxWidth - 2).Render(
 		lipgloss.JoinHorizontal(lipgloss.Top,
@@ -238,16 +244,17 @@ func printForwardHeader(selected api.Endpoint, port int) {
 	)
 
 	row := func(label, value string) string {
-		lbl := styleZinc.Render(fmt.Sprintf("%-11s", label))
+		lbl := styleZinc.Render(fmt.Sprintf("%-13s", label))
 		val := styleWhite.Render(value)
 		return lipgloss.NewStyle().Width(boxWidth - 2).Render(lbl + val)
 	}
 
-	statusRow := styleZinc.Render(fmt.Sprintf("%-11s", "Status")) + styleGreen.Render("online")
+	statusRow := styleZinc.Render(fmt.Sprintf("%-13s", "Status")) + styleGreen.Render("online")
 	statusLine := lipgloss.NewStyle().Width(boxWidth - 2).Render(statusRow)
 
 	box := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#7C3AED")).
 		Padding(0, 1).
 		Width(boxWidth).
 		Render(
@@ -257,12 +264,16 @@ func printForwardHeader(selected api.Endpoint, port int) {
 				row("Endpoint", selected.Name),
 				row("Webhook URL", webhookURL),
 				row("Forwarding", fmt.Sprintf("http://localhost:%d", port)),
+				row("Path", "/"),
 				statusLine,
 			),
 		)
 
 	fmt.Println(box)
 	fmt.Println(styleZinc.Render("Ctrl+C to stop"))
+	fmt.Println(styleZinc.Render(
+		"  TIME       METHOD  STATUS                         SIZE",
+	))
 	fmt.Println(styleZinc.Render(strings.Repeat("─", boxWidth)))
 	fmt.Println()
 }

@@ -11,6 +11,7 @@ type WebhookRequest struct {
 	ID          string            `json:"id"`
 	EndpointID  string            `json:"endpointId"`
 	Method      string            `json:"method"`
+	Path        string            `json:"path"`
 	Headers     map[string]string `json:"headers"`
 	Body        any               `json:"body"`
 	Query       map[string]string `json:"query"`
