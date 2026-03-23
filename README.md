@@ -11,8 +11,8 @@
 
 <br />
 
-[![Release](https://img.shields.io/github/v/release/nowackikuba/hookscope?style=flat-square&color=7c3aed)](https://github.com/nowackikuba/hookscope/releases)
-[![License](https://img.shields.io/github/license/nowackikuba/hookscope?style=flat-square&color=7c3aed)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/nowackikuba/hookscope-cli?style=flat-square&color=7c3aed)](https://github.com/nowackikuba/hookscope-cli/releases)
+[![License](https://img.shields.io/github/license/nowackikuba/hookscope-cli?style=flat-square&color=7c3aed)](LICENSE)
 [![Dashboard](https://img.shields.io/badge/dashboard-app.hookscope.dev-7c3aed?style=flat-square)](https://app.hookscope.dev)
 
 </div>
@@ -44,12 +44,12 @@ brew install hookscope
 ### Linux
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nowackikuba/hookscope/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nowackikuba/hookscope-cli/main/install.sh | bash
 ```
 
 ### Manual
 
-Download the latest binary from [GitHub Releases](https://github.com/nowackikuba/hookscope/releases).
+Download the latest binary from [GitHub Releases](https://github.com/nowackikuba/hookscope-cli/releases).
 
 | Platform              | Binary                   |
 | --------------------- | ------------------------ |
