@@ -11,8 +11,8 @@
 
 <br />
 
-[![Release](https://img.shields.io/github/v/release/TWOJ_USERNAME/hookscope?style=flat-square&color=7c3aed)](https://github.com/TWOJ_USERNAME/hookscope/releases)
-[![License](https://img.shields.io/github/license/TWOJ_USERNAME/hookscope?style=flat-square&color=7c3aed)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/nowackikuba/hookscope?style=flat-square&color=7c3aed)](https://github.com/nowackikuba/hookscope/releases)
+[![License](https://img.shields.io/github/license/nowackikuba/hookscope?style=flat-square&color=7c3aed)](LICENSE)
 [![Dashboard](https://img.shields.io/badge/dashboard-app.hookscope.dev-7c3aed?style=flat-square)](https://app.hookscope.dev)
 
 </div>
@@ -37,19 +37,19 @@ You're integrating Stripe. You get a `400`. No idea what payload was sent. No id
 ### macOS (Homebrew)
 
 ```bash
-brew tap TWOJ_USERNAME/hookscope
+brew tap nowackikuba/hookscope
 brew install hookscope
 ```
 
 ### Linux
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/TWOJ_USERNAME/hookscope/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nowackikuba/hookscope/main/install.sh | bash
 ```
 
 ### Manual
 
-Download the latest binary from [GitHub Releases](https://github.com/TWOJ_USERNAME/hookscope/releases).
+Download the latest binary from [GitHub Releases](https://github.com/nowackikuba/hookscope/releases).
 
 | Platform              | Binary                   |
 | --------------------- | ------------------------ |
