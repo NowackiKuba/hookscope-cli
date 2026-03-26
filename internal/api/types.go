@@ -15,6 +15,7 @@ type WebhookRequest struct {
 	Path        string            `json:"path"`
 	Headers     map[string]string `json:"headers"`
 	Body        any               `json:"body"`
+	RawBody     []byte            `json:"rawBody,omitempty"`
 	Query       map[string]string `json:"query"`
 	IP          string            `json:"ip"`
 	ContentType string            `json:"contentType"`

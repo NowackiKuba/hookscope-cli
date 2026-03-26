@@ -13,8 +13,13 @@ import (
 
 // cli_ebaedf96ca3fda5d548cbf3051db17dfa94b409348997d2b92496332af5c9813
 
-func Forward(localPort int, req api.WebhookRequest) (status int, err error) {
+func Forward(localPort int, req api.WebhookRequest, endpointPath string) (status int, err error) {
+	 fmt.Printf("DEBUG rawBody len: %d\n", len(req.RawBody))
+    fmt.Printf("DEBUG body nil: %v\n", req.Body == nil)
 	path := req.Path
+	if path == "" {
+		path = endpointPath
+	}
 	if path == "" {
 		path = "/"
 	}
@@ -24,7 +29,9 @@ func Forward(localPort int, req api.WebhookRequest) (status int, err error) {
 	url := fmt.Sprintf("http://localhost:%d%s", localPort, path)
 
 	var bodyReader *bytes.Reader
-	if req.Body != nil {
+	if len(req.RawBody) > 0 {
+		bodyReader = bytes.NewReader(req.RawBody)
+	} else if req.Body != nil {
 		b, mErr := json.Marshal(req.Body)
 		if mErr != nil {
 			return 0, fmt.Errorf("marshal body: %w", mErr)

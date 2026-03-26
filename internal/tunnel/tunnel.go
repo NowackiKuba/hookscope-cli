@@ -23,7 +23,8 @@ type Tunnel struct {
 	token     string
 	localPort int
 
-	endpointID string
+	endpointID   string
+	endpointPath string
 
 	events chan socketEvent
 	done   chan struct{}
@@ -105,8 +106,9 @@ func (t *Tunnel) Authenticate(ctx context.Context) ([]api.Endpoint, error) {
 	}
 }
 
-func (t *Tunnel) Subscribe(ctx context.Context, endpointID string) error {
+func (t *Tunnel) Subscribe(ctx context.Context, endpointID string, endpointPath string) error {
 	t.endpointID = endpointID
+	t.endpointPath = endpointPath
 	if err := t.emit(ctx, "subscribe", map[string]string{"endpointId": endpointID}); err != nil {
 		return err
 	}
@@ -159,10 +161,20 @@ func (t *Tunnel) Listen(ctx context.Context, localPort int, onForwarded func(req
 				}
 				continue
 			}
-			status, err := Forward(localPort, req)
+			status, fwdErr := Forward(localPort, req, t.endpointPath)
 			if onForwarded != nil {
-				onForwarded(req, status, err)
+				onForwarded(req, status, fwdErr)
 			}
+			var errMsg *string
+			if fwdErr != nil {
+				s := fwdErr.Error()
+				errMsg = &s
+			}
+			_ = t.emit(ctx, "tunnel.response", map[string]any{
+				"requestId": req.ID,
+				"status":    status,
+				"error":     errMsg,
+			})
 		}
 	}
 }

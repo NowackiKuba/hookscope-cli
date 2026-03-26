@@ -90,7 +90,7 @@ func runForward(cmd *cobra.Command, args []string) error {
 			printForwardHeader(selected, port)
 		}
 
-		if err := t.Subscribe(ctx, selectedID); err != nil {
+		if err := t.Subscribe(ctx, selectedID, endpointPath(selected)); err != nil {
 			t.Close()
 			return fmt.Errorf("subscribe failed: %w", err)
 		}
@@ -225,6 +225,13 @@ func stringsTrim(s string) string {
 	return strings.TrimSpace(s)
 }
 
+func endpointPath(ep api.Endpoint) string {
+	if u, err := url.Parse(ep.TargetUrl); err == nil && u.Path != "" {
+		return u.Path
+	}
+	return "/"
+}
+
 func printForwardHeader(selected api.Endpoint, port int) {
 	const boxWidth = 60
 	const webhookMax = 40
@@ -234,13 +241,9 @@ func printForwardHeader(selected api.Endpoint, port int) {
 		webhookURL = webhookURL[:webhookMax-3] + "..."
 	}
 
-	fmt.Printf("SELETED: %w", selected)
-	endpointPath := "/"
-	if u, err := url.Parse(selected.TargetUrl); err == nil && u.Path != "" {
-		endpointPath = u.Path
-	}
+	epPath := endpointPath(selected)
 
-	titleLeft := styleViolet.Copy().Bold(true).Render("hookscope")
+	titleLeft := styleViolet.Bold(true).Render("hookscope")
 	titleRight := styleZinc.Render("v" + rootCmd.Version)
 	titleLine := lipgloss.NewStyle().Width(boxWidth - 2).Render(
 		lipgloss.JoinHorizontal(lipgloss.Top,
@@ -271,7 +274,7 @@ func printForwardHeader(selected api.Endpoint, port int) {
 				row("Endpoint", selected.Name),
 				row("Webhook URL", webhookURL),
 				row("Forwarding", fmt.Sprintf("http://localhost:%d", port)),
-				row("Path", endpointPath),
+				row("Path", epPath),
 				statusLine,
 			),
 		)
