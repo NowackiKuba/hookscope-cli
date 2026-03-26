@@ -5,6 +5,7 @@ type Endpoint struct {
 	Name       string `json:"name"`
 	WebhookURL string `json:"webhookUrl"`
 	Token      string `json:"token"`
+	TargetUrl string `json:"targetUrl"`
 }
 
 type WebhookRequest struct {

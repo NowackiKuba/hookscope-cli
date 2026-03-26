@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -11,11 +12,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/NowackiKuba/hookscope-cli/internal/api"
+	"github.com/NowackiKuba/hookscope-cli/internal/auth"
+	"github.com/NowackiKuba/hookscope-cli/internal/tunnel"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/NowackiKuba/hookscope-cli/internal/auth"
-	"github.com/NowackiKuba/hookscope-cli/internal/api"
-	"github.com/NowackiKuba/hookscope-cli/internal/tunnel"
 	"github.com/spf13/cobra"
 )
 
@@ -233,6 +234,12 @@ func printForwardHeader(selected api.Endpoint, port int) {
 		webhookURL = webhookURL[:webhookMax-3] + "..."
 	}
 
+	fmt.Printf("SELETED: %w", selected)
+	endpointPath := "/"
+	if u, err := url.Parse(selected.TargetUrl); err == nil && u.Path != "" {
+		endpointPath = u.Path
+	}
+
 	titleLeft := styleViolet.Copy().Bold(true).Render("hookscope")
 	titleRight := styleZinc.Render("v" + rootCmd.Version)
 	titleLine := lipgloss.NewStyle().Width(boxWidth - 2).Render(
@@ -264,7 +271,7 @@ func printForwardHeader(selected api.Endpoint, port int) {
 				row("Endpoint", selected.Name),
 				row("Webhook URL", webhookURL),
 				row("Forwarding", fmt.Sprintf("http://localhost:%d", port)),
-				row("Path", "/"),
+				row("Path", endpointPath),
 				statusLine,
 			),
 		)
